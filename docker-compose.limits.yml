@@ -1,0 +1,12 @@
+# Optional overlay: resource caps.
+#   docker compose -f docker-compose.yml -f docker-compose.limits.yml up -d
+services:
+  multica-runtime:
+    deploy:
+      resources:
+        limits:
+          cpus: '${MULTICA_CPUS:-4}'
+          memory: ${MULTICA_MEMORY:-8g}
+          pids: ${MULTICA_PIDS_LIMIT:-4096}
+        reservations:
+          memory: ${MULTICA_MEMORY_RESERVATION:-1g}

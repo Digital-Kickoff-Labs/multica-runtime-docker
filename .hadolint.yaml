@@ -1,0 +1,9 @@
+ignored:
+  # Base images are tagged through ARGs (golang:1-bookworm, node:22-bookworm-slim),
+  # which hadolint cannot resolve.
+  - DL3006
+  # Pinning Debian package versions breaks on every point release.
+  - DL3008
+  # The `cd` lives inside a multi-command RUN; WORKDIR would change the directory
+  # for every following layer.
+  - DL3003
