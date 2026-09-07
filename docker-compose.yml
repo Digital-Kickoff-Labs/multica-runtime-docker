@@ -1,0 +1,66 @@
+name: ${COMPOSE_PROJECT_NAME:-multica-runtime}
+
+services:
+  multica-runtime:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MULTICA_REF: ${MULTICA_REF:-main}
+        NODE_IMAGE: ${NODE_IMAGE:-node:22-bookworm-slim}
+        GO_IMAGE: ${GO_IMAGE:-golang:1-bookworm}
+        CLAUDE_CODE_VERSION: ${CLAUDE_CODE_VERSION:-latest}
+        CODEX_VERSION: ${CODEX_VERSION:-latest}
+        CBM_VERSION: ${CBM_VERSION:-0.10.8}
+        INSTALL_BROWSER_DEPS: ${INSTALL_BROWSER_DEPS:-false}
+    image: ${MULTICA_IMAGE:-multica-runtime:local}
+    restart: unless-stopped
+    shm_size: ${MULTICA_SHM_SIZE:-1gb}
+    stop_grace_period: ${MULTICA_STOP_GRACE_PERIOD:-120s}
+
+    environment:
+      MULTICA_TOKEN: ${MULTICA_TOKEN:-}
+      MULTICA_PROFILE: ${MULTICA_PROFILE:-}
+      MULTICA_SERVER_URL: ${MULTICA_SERVER_URL:-}
+
+      MULTICA_DAEMON_DEVICE_NAME: ${MULTICA_DAEMON_DEVICE_NAME:-multica-runtime}
+      MULTICA_AGENT_RUNTIME_NAME: ${MULTICA_AGENT_RUNTIME_NAME:-Docker runtime}
+      MULTICA_DAEMON_MAX_CONCURRENT_TASKS: ${MULTICA_DAEMON_MAX_CONCURRENT_TASKS:-6}
+      MULTICA_DAEMON_AUTO_UPDATE: ${MULTICA_DAEMON_AUTO_UPDATE:-false}
+      MULTICA_WORKSPACES_ROOT: /data/workspaces
+
+      MULTICA_GC_ENABLED: ${MULTICA_GC_ENABLED:-true}
+      MULTICA_GC_COMPLETED_TASK_TTL: ${MULTICA_GC_COMPLETED_TASK_TTL:-24h}
+      MULTICA_GC_ARTIFACT_TTL: ${MULTICA_GC_ARTIFACT_TTL:-6h}
+      MULTICA_GC_REPO_TTL: ${MULTICA_GC_REPO_TTL:-168h}
+
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      CURSOR_API_KEY: ${CURSOR_API_KEY:-}
+
+      CBM_CACHE_DIR: /data/codebase-memory
+      CBM_RUNTIME_DIR: /tmp/codebase-memory-runtime
+      CBM_ALLOWED_ROOT: /data/workspaces
+      CBM_LOG_LEVEL: ${CBM_LOG_LEVEL:-info}
+
+      GIT_USER_NAME: ${GIT_USER_NAME:-}
+      GIT_USER_EMAIL: ${GIT_USER_EMAIL:-}
+      PUID: ${PUID:-}
+      PGID: ${PGID:-}
+      MULTICA_FIX_PERMISSIONS: ${MULTICA_FIX_PERMISSIONS:-shallow}
+
+    volumes:
+      - multica_home:/home/node
+      - multica_scratch:/workspace
+      - ${MULTICA_DATA_ROOT:-./data}/workspaces:/data/workspaces
+      - ${MULTICA_DATA_ROOT:-./data}/codebase-memory:/data/codebase-memory
+
+    logging:
+      driver: json-file
+      options:
+        max-size: ${LOG_MAX_SIZE:-50m}
+        max-file: ${LOG_MAX_FILE:-5}
+
+volumes:
+  multica_home:
+  multica_scratch:

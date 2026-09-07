@@ -1,0 +1,8 @@
+ignored:
+  # Les images de base sont taguees via ARG (golang:1-bookworm, node:22-bookworm-slim),
+  # que hadolint ne sait pas resoudre.
+  - DL3006
+  # Epingler les versions de paquets Debian casse a chaque release mineure.
+  - DL3008
+  # Le `cd` vit dans un RUN multi-commandes, WORKDIR changerait le repertoire des couches suivantes.
+  - DL3003
