@@ -6,35 +6,35 @@ SERVICE ?= multica-runtime
 help:
 	@grep -E '^[a-z-]+:.*?##' $(MAKEFILE_LIST) | sed 's/:.*##/\t/'
 
-build: ## Construit l'image
+build: ## Build the image
 	$(COMPOSE) build
 
-rebuild: ## Reconstruit en forcant un multica frais (contourne le cache du stage builder)
+rebuild: ## Rebuild with a fresh multica (bypasses the builder stage cache)
 	$(COMPOSE) build --no-cache-filter multica-builder
 
-up: ## Demarre le runtime
+up: ## Start the runtime
 	$(COMPOSE) up -d
 
-down: ## Arrete et supprime le conteneur (volumes conserves)
+down: ## Stop and remove the container (volumes are kept)
 	$(COMPOSE) down
 
-restart: ## Redemarre le service
+restart: ## Restart the service
 	$(COMPOSE) restart $(SERVICE)
 
-logs: ## Suit les logs
+logs: ## Follow the logs
 	$(COMPOSE) logs -f --tail=200 $(SERVICE)
 
-shell: ## Ouvre un shell dans le conteneur
+shell: ## Open a shell in the container
 	$(COMPOSE) exec --user node $(SERVICE) bash
 
-login: ## Login Multica interactif
+login: ## Interactive Multica login
 	$(COMPOSE) exec --user node $(SERVICE) multica login --token
 
-status: ## Etat du daemon
+status: ## Daemon status
 	$(COMPOSE) exec --user node $(SERVICE) multica daemon status
 
-health: ## Etat de sante Docker
+health: ## Docker health status
 	docker inspect --format '{{ .State.Health.Status }}' $$($(COMPOSE) ps -q $(SERVICE))
 
-prune: ## Supprime conteneur ET volumes nommes (auth perdue)
+prune: ## Remove container AND named volumes (auth is lost)
 	$(COMPOSE) down -v

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 log() { printf '[multica-runtime] %s\n' "$*" >&2; }
-die() { log "ERREUR: $*"; exit 1; }
+die() { log "ERROR: $*"; exit 1; }
 
 APP_USER="${APP_USER:-node}"
 APP_GROUP="${APP_GROUP:-$APP_USER}"
@@ -19,11 +19,11 @@ STATE_DIRS=(
 
 run_as_root() {
     if [ -n "${PUID:-}" ] && [ "$PUID" != "$(id -u "$APP_USER")" ]; then
-        log "Remappage uid $APP_USER -> $PUID"
+        log "Remapping uid of $APP_USER to $PUID"
         usermod -o -u "$PUID" "$APP_USER"
     fi
     if [ -n "${PGID:-}" ] && [ "$PGID" != "$(id -g "$APP_USER")" ]; then
-        log "Remappage gid $APP_GROUP -> $PGID"
+        log "Remapping gid of $APP_GROUP to $PGID"
         groupmod -o -g "$PGID" "$APP_GROUP"
     fi
 
@@ -50,7 +50,7 @@ register_mcp_json() {
     mkdir -p "$(dirname "$config")"
     [ -e "$config" ] || printf '{}\n' > "$config"
     jq -e . "$config" > /dev/null 2>&1 \
-        || die "Configuration JSON invalide, abandon sans ecrasement : $config"
+        || die "Invalid JSON configuration, aborting without overwriting: $config"
 
     local tmp="${config}.cbm.tmp"
     jq --arg cache "${CBM_CACHE_DIR:-/data/codebase-memory}" \
@@ -65,7 +65,7 @@ register_mcp_json() {
 }
 
 register_mcp_codex() {
-    command -v codex > /dev/null 2>&1 || { log "codex absent, MCP non enregistre"; return 0; }
+    command -v codex > /dev/null 2>&1 || { log "codex not found, skipping MCP registration"; return 0; }
     codex mcp remove codebase-memory-mcp > /dev/null 2>&1 || true
     codex mcp add codebase-memory-mcp \
         --env "CBM_CACHE_DIR=${CBM_CACHE_DIR:-/data/codebase-memory}" \
@@ -78,21 +78,21 @@ ensure_authenticated() {
     multica "${MULTICA_GLOBAL_FLAGS[@]}" auth status > /dev/null 2>&1 && return 0
 
     if [ -n "${MULTICA_TOKEN:-}" ]; then
-        log "Authentification via MULTICA_TOKEN…"
+        log "Authenticating with MULTICA_TOKEN…"
         multica "${MULTICA_GLOBAL_FLAGS[@]}" login --token "$MULTICA_TOKEN" > /dev/null \
-            || die "Echec de l'authentification avec MULTICA_TOKEN"
+            || die "Authentication with MULTICA_TOKEN failed"
         return 0
     fi
 
     if [ "${MULTICA_WAIT_FOR_LOGIN:-true}" != "true" ]; then
-        die "Non authentifie et MULTICA_TOKEN absent."
+        die "Not authenticated and MULTICA_TOKEN is unset."
     fi
 
     log "-------------------------------------------------------------"
-    log "Multica n'est pas authentifie."
-    log "Option A : definir MULTICA_TOKEN=mcn_... puis redemarrer."
-    log "Option B : docker compose exec multica-runtime multica login --token"
-    log "Le conteneur reste en vie pour permettre le login interactif."
+    log "Multica is not authenticated."
+    log "Option A: set MULTICA_TOKEN=mcn_... and restart."
+    log "Option B: docker compose exec multica-runtime multica login --token"
+    log "The container stays alive so you can log in interactively."
     log "-------------------------------------------------------------"
     exec sleep infinity
 }
@@ -103,7 +103,7 @@ main() {
     MULTICA_GLOBAL_FLAGS=()
     [ -n "${MULTICA_PROFILE:-}" ] && MULTICA_GLOBAL_FLAGS+=(--profile "$MULTICA_PROFILE")
 
-    command -v cursor-agent > /dev/null 2>&1 || log "AVERTISSEMENT: cursor-agent introuvable dans le PATH"
+    command -v cursor-agent > /dev/null 2>&1 || log "WARNING: cursor-agent not found in PATH"
 
     register_mcp_json "$APP_HOME/.claude.json"
     register_mcp_json "$APP_HOME/.cursor/mcp.json"
@@ -119,7 +119,7 @@ main() {
         set -- multica "${MULTICA_GLOBAL_FLAGS[@]}" "${@:2}"
     fi
 
-    log "Demarrage : $*"
+    log "Starting: $*"
     exec "$@"
 }
 

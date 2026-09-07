@@ -1,13 +1,12 @@
-# Multica agent runtime — image Docker reutilisable
+# Multica agent runtime — reusable Docker image
 
-Runtime Multica conteneurise : daemon `multica`, CLI agents (Claude Code, Codex,
-Cursor) et `codebase-memory-mcp` cable automatiquement au demarrage.
+Containerised Multica runtime: the `multica` daemon, the agent CLIs (Claude
+Code, Codex, Cursor) and `codebase-memory-mcp`, wired up automatically at start.
 
-Concu pour etre depose tel quel sur n'importe quel serveur : tout ce qui est
-specifique a une machine vit dans `.env`, jamais dans le `Dockerfile` ni dans le
-`docker-compose.yml`.
+Designed to be dropped as-is onto any server: everything machine-specific lives
+in `.env`, never in the `Dockerfile` or in `docker-compose.yml`.
 
-## Demarrage rapide
+## Quick start
 
 ```bash
 cp .env.example .env
@@ -16,128 +15,128 @@ docker compose up -d --build
 docker compose logs -f
 ```
 
-Sans `MULTICA_TOKEN`, le conteneur demarre et attend, puis :
+Without `MULTICA_TOKEN` the container starts and waits, then:
 
 ```bash
 docker compose exec multica-runtime multica login --token
 docker compose restart multica-runtime
 ```
 
-## Image prete a l'emploi (GHCR)
+## Prebuilt image (GHCR)
 
-La CI construit une image multi-arch (amd64 + arm64) et la pousse sur GHCR.
-Sur un nouveau serveur, plus besoin de rebuilder :
+CI builds a multi-arch image (amd64 + arm64) and pushes it to GHCR. On a new
+server there is nothing left to build:
 
 ```bash
-docker login ghcr.io -u <user> -p <token-avec-read:packages>
+docker login ghcr.io -u <user> -p <token-with-read:packages>
 MULTICA_IMAGE=ghcr.io/digital-kickoff-labs/multica-runtime-docker:latest \
   docker compose up -d --no-build
 ```
 
-Le registre est en visibilite **privee** par defaut, et ce n'est pas un detail
-d'organisation : voir [NOTICE.md](NOTICE.md).
+The registry is **private** by default, and that is not an organisational
+detail: see [NOTICE.md](NOTICE.md).
 
-## Ce qui persiste
+## What persists
 
-| Chemin conteneur       | Support                          | Contenu                                        |
-| ---------------------- | -------------------------------- | ---------------------------------------------- |
-| `/home/node`           | volume nomme `multica_home`      | auth Multica, `~/.claude`, `~/.codex`, `~/.cursor` |
-| `/data/workspaces`     | bind `${MULTICA_DATA_ROOT}`      | workspaces des runs                            |
-| `/data/codebase-memory`| bind `${MULTICA_DATA_ROOT}`      | index codebase-memory-mcp                      |
-| `/workspace`           | volume nomme `multica_scratch`   | scratch                                        |
+| Container path          | Backing store                    | Contents                                            |
+| ----------------------- | -------------------------------- | --------------------------------------------------- |
+| `/home/node`            | named volume `multica_home`      | Multica auth, `~/.claude`, `~/.codex`, `~/.cursor`   |
+| `/data/workspaces`      | bind `${MULTICA_DATA_ROOT}`      | run workspaces                                       |
+| `/data/codebase-memory` | bind `${MULTICA_DATA_ROOT}`      | codebase-memory-mcp index                            |
+| `/workspace`            | named volume `multica_scratch`   | scratch                                              |
 
-Aucun binaire livre par l'image ne vit dans `/home/node` : l'outillage est en
-`/usr/local/bin`, `/opt/cursor` et `/opt/multica/bin`. Un `docker compose build`
-suivi d'un `up -d` met donc reellement a jour les CLI, meme si le volume home
-existe deja.
+No image-provided binary lives in `/home/node`: tooling sits in
+`/usr/local/bin`, `/opt/cursor` and `/opt/multica/bin`. A `docker compose build`
+followed by `up -d` therefore really does update the CLIs, even when the home
+volume already exists.
 
-## Portage sur un autre serveur
+## Moving to another server
 
-1. Copier le dossier (ou cloner le repo qui le contient).
-2. `cp .env.example .env`, renseigner `MULTICA_TOKEN`, `MULTICA_DATA_ROOT`,
+1. Copy the directory (or clone the repository holding it).
+2. `cp .env.example .env`, then fill in `MULTICA_TOKEN`, `MULTICA_DATA_ROOT` and
    `MULTICA_DAEMON_DEVICE_NAME`.
-3. Aligner `PUID`/`PGID` sur le proprietaire du repertoire hote
+3. Match `PUID`/`PGID` to the owner of the host directory
    (`stat -c '%u %g' "$MULTICA_DATA_ROOT"`).
 4. `docker compose up -d --build`.
 
-Plusieurs runtimes sur une meme machine : changer `COMPOSE_PROJECT_NAME`,
-`MULTICA_DAEMON_DEVICE_NAME` et poser `MULTICA_PROFILE` (isole config, etat du
-daemon et workspaces cote CLI).
+Several runtimes on one machine: change `COMPOSE_PROJECT_NAME` and
+`MULTICA_DAEMON_DEVICE_NAME`, and set `MULTICA_PROFILE` (it isolates config,
+daemon state and workspaces on the CLI side).
 
 ## Coolify
 
-Pointer l'application Coolify sur le repo, type « Docker Compose », fichier
-`docker-compose.yml`. Les variables Coolify remplacent le `.env`. Le service est
-`build:` — pas de `dockerfile_inline`, donc le `Dockerfile` reste relisable et
-diffable en revue.
+Point the Coolify application at the repository, type "Docker Compose", file
+`docker-compose.yml`. Coolify variables replace the `.env`. The service uses
+`build:` — no `dockerfile_inline`, so the `Dockerfile` stays readable and
+reviewable in a diff.
 
-## Builds reproductibles
+## Reproducible builds
 
-`MULTICA_REF=main` reconstruit depuis la branche, mais Docker met en cache la
-couche `git fetch` : un `build` ne rapatriera pas forcement le dernier commit.
+`MULTICA_REF=main` rebuilds from the branch, but Docker caches the `git fetch`
+layer: a `build` will not necessarily pick up the latest commit.
 
-- Reproductible : epingler un tag ou un SHA — `MULTICA_REF=v1.4.2`.
-- Forcer un rafraichissement sur `main` : `make rebuild`
+- Reproducible: pin a tag or a SHA — `MULTICA_REF=v1.4.2`.
+- Force a refresh on `main`: `make rebuild`
   (`docker compose build --no-cache-filter multica-builder`).
 
-Meme logique pour `CLAUDE_CODE_VERSION`, `CODEX_VERSION` et `CBM_VERSION` :
-`latest` par defaut pour demarrer, a epingler des que le runtime est en prod.
+The same applies to `CLAUDE_CODE_VERSION`, `CODEX_VERSION` and `CBM_VERSION`:
+`latest` to get started, pin them once the runtime is in production.
 
-`codebase-memory-mcp` est verifie en deux temps : `checksums.txt` contre le
-sha256 epingle (`CBM_CHECKSUMS_SHA256`), puis l'archive contre `checksums.txt`.
-Changer `CBM_VERSION` impose de mettre a jour ce sha256.
+`codebase-memory-mcp` is verified in two steps: `checksums.txt` against the
+pinned sha256 (`CBM_CHECKSUMS_SHA256`), then the archive against
+`checksums.txt`. Changing `CBM_VERSION` means updating that sha256.
 
-## Auto-update du daemon
+## Daemon auto-update
 
-`MULTICA_DAEMON_AUTO_UPDATE=false` par defaut : l'image est l'unite de
-deploiement, on met a jour par rebuild. Si tu preferes l'auto-update, passe la
-variable a `true` — le binaire est en `/opt/multica/bin`, repertoire possede par
-`node`, donc l'ecriture fonctionne (ce n'etait pas le cas avec un binaire
-root-only sous `/usr/local/bin`).
+`MULTICA_DAEMON_AUTO_UPDATE=false` by default: the image is the deployment unit,
+updates happen through a rebuild. If you prefer auto-update, flip the variable to
+`true` — the binary lives in `/opt/multica/bin`, a directory owned by `node`, so
+the write succeeds (which was not the case with a root-only binary under
+`/usr/local/bin`).
 
-## Screenshots / navigateur
+## Screenshots / browser
 
-`INSTALL_BROWSER_DEPS=true` ajoute Chromium et les polices necessaires aux
-captures d'ecran des agents. `shm_size` est a 1 Go pour eviter les crashes
-Chromium en `/dev/shm` trop petit.
+`INSTALL_BROWSER_DEPS=true` adds Chromium and the fonts agents need for
+screenshots. `shm_size` is set to 1 GB to avoid Chromium crashes caused by a
+`/dev/shm` that is too small.
 
-## Plafonds de ressources
+## Resource caps
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.limits.yml up -d
 ```
 
-## Depannage
+## Troubleshooting
 
 ```bash
-make status                      # etat du daemon
-make health                      # healthcheck Docker
+make status                      # daemon status
+make health                      # Docker healthcheck
 docker compose logs --tail=200   # bootstrap + daemon
-make shell                       # shell dans le conteneur
+make shell                       # shell inside the container
 ```
 
-`MULTICA_FIX_PERMISSIONS` : `shallow` (defaut, corrige la racine si non
-inscriptible), `deep` (chown recursif, lent sur gros volumes), `off`.
+`MULTICA_FIX_PERMISSIONS`: `shallow` (default, fixes the root directory when it
+is not writable), `deep` (recursive chown, slow on large volumes), `off`.
 
-## Notes d'implementation
+## Implementation notes
 
-- **Pas de `USER node` dans l'image** : l'entrypoint demarre en root pour aligner
-  les droits des bind mounts (`PUID`/`PGID`), puis redescend via `gosu`. Le
-  daemon ne tourne jamais en root. Corollaire : `docker compose exec` doit
-  passer `--user node` (c'est ce que fait le `Makefile`), sinon les fichiers
-  ecrits dans `/home/node` deviennent root-owned et cassent le demarrage suivant.
-- **`tini` est dans l'image** (`ENTRYPOINT`), donc pas de `init: true` dans le
-  compose : un seul reaper de zombies, ce qui compte quand les agents lancent
-  des arbres de sous-processus.
-- **Le healthcheck passe par `gosu`** pour interroger l'etat du daemon avec le
-  bon utilisateur.
+- **No `USER node` in the image**: the entrypoint starts as root to align bind
+  mount permissions (`PUID`/`PGID`), then drops to `node` through `gosu`. The
+  daemon never runs as root. Consequence: `docker compose exec` must pass
+  `--user node` (the `Makefile` does), otherwise files written to `/home/node`
+  end up root-owned and break the next start.
+- **`tini` ships in the image** (`ENTRYPOINT`), so there is no `init: true` in
+  the compose file: a single zombie reaper, which matters when agents spawn
+  trees of subprocesses.
+- **The healthcheck goes through `gosu`** so it queries daemon state as the
+  right user.
 
-## Licence
+## License
 
-Le contenu de ce depot est sous licence MIT (voir [LICENSE](LICENSE)).
+The contents of this repository are MIT licensed (see [LICENSE](LICENSE)).
 
-Cette licence ne couvre **que** les fichiers du depot. Les logiciels que le
-build telecharge — dont Claude Code et cursor-agent, proprietaires — gardent
-leurs propres conditions. C'est la raison pour laquelle l'image construite ne
-doit pas etre republiee sur un registre public : [NOTICE.md](NOTICE.md) detaille
-le raisonnement composant par composant.
+That license covers **only** the files in this repository. The software the
+build downloads — including Claude Code and cursor-agent, both proprietary —
+keeps its own terms. This is why the resulting image must not be republished to
+a public registry: [NOTICE.md](NOTICE.md) walks through the reasoning component
+by component.

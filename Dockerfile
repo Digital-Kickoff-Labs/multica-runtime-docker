@@ -76,14 +76,14 @@ ENV CHROME_BIN=/usr/bin/chromium \
     PUPPETEER_SKIP_DOWNLOAD=1 \
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
-# codebase-memory-mcp : archive portable obligatoire sur Bookworm (glibc 2.36).
+# The portable archive is required on Debian Bookworm (glibc 2.36).
 ARG TARGETARCH
 ARG CBM_VERSION=0.10.8
 ARG CBM_CHECKSUMS_SHA256=9d2e33bdf9c9dc8662079d5b9a1bbf716aa2e62e2ed6cc51cf4ae06d42498787
 RUN set -eux; \
     case "${TARGETARCH}" in \
         amd64|arm64) cbm_arch="${TARGETARCH}" ;; \
-        *) echo "Architecture non supportee: ${TARGETARCH}" >&2; exit 1 ;; \
+        *) echo "Unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
     cbm_asset="codebase-memory-mcp-linux-${cbm_arch}-portable.tar.gz"; \
     cbm_base="https://github.com/DeusData/codebase-memory-mcp/releases/download/v${CBM_VERSION}"; \
@@ -98,8 +98,8 @@ RUN set -eux; \
     codebase-memory-mcp --version | grep -F "${CBM_VERSION}"; \
     rm -rf /tmp/cbm
 
-# Cursor s'installe sous $HOME. On l'ancre hors de /home/node pour qu'un volume
-# monte sur le home ne masque jamais l'outillage livre par l'image.
+# Cursor installs under $HOME. Anchoring it outside /home/node keeps a volume
+# mounted on the home directory from shadowing image-provided tooling.
 RUN set -eux; \
     mkdir -p "${CURSOR_ROOT}"; \
     export HOME="${CURSOR_ROOT}"; \
@@ -119,8 +119,8 @@ RUN npm install --global --no-fund --no-audit \
 
 COPY --from=multica-builder /out/multica ${MULTICA_BIN_DIR}/multica
 
-# Le daemon sait se mettre a jour tout seul : le repertoire du binaire doit donc
-# appartenir a l'utilisateur applicatif, sinon l'auto-update echoue en silence.
+# The daemon can self-update, so the binary directory must be owned by the app
+# user; otherwise the update fails silently.
 RUN mkdir -p /workspace /data/workspaces /data/codebase-memory \
     && chown -R node:node /workspace /data/workspaces /data/codebase-memory /home/node "${MULTICA_BIN_DIR}"
 

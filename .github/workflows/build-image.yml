@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       multica_ref:
-        description: Ref multica a construire (branche, tag ou SHA)
+        description: multica ref to build (branch, tag or SHA)
         required: false
         default: main
 
@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # GHCR n'accepte que des noms en minuscules, or l'organisation est capitalisee.
+      # GHCR only accepts lowercase names, and the organisation name is capitalised.
       - name: Prepare
         run: |
           echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"

@@ -1,35 +1,34 @@
-# Composants tiers et redistribution
+# Third-party components and redistribution
 
-La licence MIT de ce depot couvre **uniquement** les fichiers qu'il contient :
-`Dockerfile`, `docker-entrypoint.sh`, les fichiers Compose, le `Makefile` et la
+The MIT license of this repository covers **only** the files it contains:
+`Dockerfile`, `docker-entrypoint.sh`, the Compose files, the `Makefile` and the
 documentation.
 
-Elle ne couvre pas les logiciels tiers que le `Dockerfile` telecharge et
-installe au moment du build. Chacun reste soumis a sa propre licence.
+It does not cover the third-party software the `Dockerfile` downloads and
+installs at build time. Each of those keeps its own license.
 
-| Composant | Source | Licence |
+| Component | Source | License |
 | --- | --- | --- |
-| `multica` | [multica-ai/multica](https://github.com/multica-ai/multica) | Multica License (Apache-2.0 + conditions additionnelles) |
+| `multica` | [multica-ai/multica](https://github.com/multica-ai/multica) | Multica License (Apache-2.0 plus additional conditions) |
 | `codebase-memory-mcp` | [DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) | MIT |
 | `@openai/codex` | npm | Apache-2.0 |
 | `@anthropic-ai/claude-code` | npm | [Anthropic Commercial Terms of Service](https://www.anthropic.com/legal/commercial-terms) |
-| `cursor-agent` | [cursor.com/install](https://cursor.com/install) | Proprietaire (conditions Cursor) |
+| `cursor-agent` | [cursor.com/install](https://cursor.com/install) | Proprietary (Cursor terms) |
 | `gh` | cli.github.com | MIT |
 
-## Consequence pratique : ne pas publier l'image construite
+## Practical consequence: do not publish the built image
 
-Construire cette image pour ton propre usage est sans probleme : chaque outil
-est telecharge depuis sa source officielle, sous ta propre acceptation de ses
-conditions.
+Building this image for your own use is fine: every tool is downloaded from its
+official source, under your own acceptance of its terms.
 
-**Publier l'image resultante sur un registre public est une autre chose.** Elle
-embarque `@anthropic-ai/claude-code` et `cursor-agent`, deux binaires
-proprietaires dont les conditions n'accordent pas de droit de redistribution.
-Pousser cette image sur un registre public reviendrait a les redistribuer.
+**Publishing the resulting image to a public registry is a different matter.**
+It bundles `@anthropic-ai/claude-code` and `cursor-agent`, two proprietary
+binaries whose terms grant no redistribution right. Pushing this image to a
+public registry would amount to redistributing them.
 
-La CI de ce depot pousse donc vers **GHCR en visibilite privee** par defaut. Si
-tu changes ce reglage, tu prends cette decision en connaissance de cause.
+CI therefore pushes to **GHCR with private visibility** by default. If you
+change that setting, you are making that call knowingly.
 
-`multica` lui-meme n'est pas concerne par cette restriction : sa licence
-autorise la distribution, la limite portant sur l'exploitation en service
-heberge pour des tiers. Le projet publie d'ailleurs ses propres images.
+`multica` itself is not affected by this restriction: its license permits
+distribution, the limit being on operating a hosted service for third parties.
+The project publishes its own images.
