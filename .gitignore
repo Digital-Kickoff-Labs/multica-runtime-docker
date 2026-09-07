@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+data/
+*.tar.gz
+.DS_Store
