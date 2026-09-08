@@ -70,6 +70,33 @@ Point the Coolify application at the repository, type "Docker Compose", file
 `build:` — no `dockerfile_inline`, so the `Dockerfile` stays readable and
 reviewable in a diff.
 
+## Agent plugins: ponytail
+
+[ponytail](https://github.com/DietrichGebert/ponytail) (MIT) is installed into
+`~/.claude` and `~/.codex` when the container starts, for both Claude Code and
+Codex — the two CLIs the Multica daemon drives.
+
+It is **not** baked into the image: plugins live under `$HOME`, which is a
+volume, so an image-time install would be shadowed on any existing deployment.
+The entrypoint installs it instead, and skips the work when it is already there
+(cold install ~4s, subsequent starts ~0s).
+
+```bash
+PONYTAIL_ENABLED=false   # opt out
+PONYTAIL_REPO=owner/fork # point at a fork you control
+```
+
+If the install fails — GitHub unreachable, repository renamed — the entrypoint
+logs a warning and the runtime starts anyway. It is never a boot blocker.
+
+**Know what you are opting into.** Neither `claude plugin` nor `codex plugin`
+supports pinning a version: both track the upstream default branch, so agent
+behaviour can change without any rebuild on your side. The plugin ships
+lifecycle hooks that run in the agent process. At the time of wiring, those
+hooks only touch `fs`/`path`/`os` and local state files, with no network calls
+and no subprocess execution — but that is a snapshot, not a guarantee. Point
+`PONYTAIL_REPO` at a fork if you want control over when it moves.
+
 ## Reproducible builds
 
 `MULTICA_REF=main` rebuilds from the branch, but Docker caches the `git fetch`

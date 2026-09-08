@@ -74,6 +74,29 @@ register_mcp_codex() {
         -- /usr/local/bin/codebase-memory-mcp
 }
 
+# Plugins live under $HOME, which is a volume, so they cannot be baked into the
+# image; they are installed here instead, idempotently.
+register_ponytail() {
+    [ "${PONYTAIL_ENABLED:-true}" = "true" ] || return 0
+    local repo="${PONYTAIL_REPO:-DietrichGebert/ponytail}"
+
+    if command -v claude > /dev/null 2>&1 \
+        && ! claude plugin list 2>/dev/null | grep -q 'ponytail@ponytail'; then
+        log "Installing ponytail for Claude Code…"
+        claude plugin marketplace add "$repo" > /dev/null 2>&1 \
+            && claude plugin install ponytail@ponytail > /dev/null 2>&1 \
+            || log "WARNING: ponytail install failed for Claude Code, continuing without it"
+    fi
+
+    if command -v codex > /dev/null 2>&1 \
+        && ! codex plugin list 2>/dev/null | grep -q 'ponytail@ponytail'; then
+        log "Installing ponytail for Codex…"
+        codex plugin marketplace add "$repo" > /dev/null 2>&1 \
+            && codex plugin add ponytail@ponytail > /dev/null 2>&1 \
+            || log "WARNING: ponytail install failed for Codex, continuing without it"
+    fi
+}
+
 ensure_authenticated() {
     multica "${MULTICA_GLOBAL_FLAGS[@]}" auth status > /dev/null 2>&1 && return 0
 
@@ -108,6 +131,7 @@ main() {
     register_mcp_json "$APP_HOME/.claude.json"
     register_mcp_json "$APP_HOME/.cursor/mcp.json"
     register_mcp_codex
+    register_ponytail
 
     if [ -n "${GIT_USER_NAME:-}" ] && [ -n "${GIT_USER_EMAIL:-}" ]; then
         git config --global user.name "$GIT_USER_NAME"
