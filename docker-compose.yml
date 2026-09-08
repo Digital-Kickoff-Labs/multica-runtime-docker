@@ -43,6 +43,9 @@ services:
       CBM_ALLOWED_ROOT: /data/workspaces
       CBM_LOG_LEVEL: ${CBM_LOG_LEVEL:-info}
 
+      PONYTAIL_ENABLED: ${PONYTAIL_ENABLED:-true}
+      PONYTAIL_REPO: ${PONYTAIL_REPO:-DietrichGebert/ponytail}
+
       GIT_USER_NAME: ${GIT_USER_NAME:-}
       GIT_USER_EMAIL: ${GIT_USER_EMAIL:-}
       PUID: ${PUID:-}

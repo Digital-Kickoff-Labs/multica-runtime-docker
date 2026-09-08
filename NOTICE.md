@@ -5,7 +5,8 @@ The MIT license of this repository covers **only** the files it contains:
 documentation.
 
 It does not cover the third-party software the `Dockerfile` downloads and
-installs at build time. Each of those keeps its own license.
+installs at build time, nor `ponytail`, which the entrypoint installs at
+container start. Each of those keeps its own license.
 
 | Component | Source | License |
 | --- | --- | --- |
@@ -15,6 +16,7 @@ installs at build time. Each of those keeps its own license.
 | `@anthropic-ai/claude-code` | npm | [Anthropic Commercial Terms of Service](https://www.anthropic.com/legal/commercial-terms) |
 | `cursor-agent` | [cursor.com/install](https://cursor.com/install) | Proprietary (Cursor terms) |
 | `gh` | cli.github.com | MIT |
+| `ponytail` | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | MIT |
 
 ## Practical consequence: do not publish the built image
 
