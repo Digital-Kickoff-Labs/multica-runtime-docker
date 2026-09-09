@@ -128,6 +128,10 @@ main() {
 
     command -v cursor-agent > /dev/null 2>&1 || log "WARNING: cursor-agent not found in PATH"
 
+    for key in ANTHROPIC_API_KEY OPENAI_API_KEY; do
+        [ -n "${!key:-}" ] && log "WARNING: $key is set — the agent CLI will bill per token instead of using the subscription login"
+    done
+
     register_mcp_json "$APP_HOME/.claude.json"
     register_mcp_json "$APP_HOME/.cursor/mcp.json"
     register_mcp_codex

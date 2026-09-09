@@ -1,0 +1,9 @@
+# Optional overlay: authenticate the agent CLIs with API keys instead of a
+# subscription login. This bills per token — see README, "Agent authentication".
+#   docker compose -f docker-compose.yml -f docker-compose.api-auth.yml up -d
+services:
+  multica-runtime:
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      CURSOR_API_KEY: ${CURSOR_API_KEY:-}

@@ -36,6 +36,43 @@ MULTICA_IMAGE=ghcr.io/digital-kickoff-labs/multica-runtime-docker:latest \
 The registry is **private** by default, and that is not an organisational
 detail: see [NOTICE.md](NOTICE.md).
 
+## Agent authentication
+
+The agent CLIs are authenticated **once**, through their own subscription login.
+Credentials land in `/home/node`, which is a named volume, so they survive
+restarts and image rebuilds.
+
+```bash
+docker compose exec --user node multica-runtime claude auth login
+docker compose exec --user node multica-runtime codex login
+```
+
+Check what mode you are actually in — this is the number that matters:
+
+```bash
+docker compose exec --user node multica-runtime claude auth status
+# "authMethod": "claude.ai"  -> subscription
+docker compose exec --user node multica-runtime codex login status
+# "Logged in using ChatGPT"  -> subscription
+```
+
+For a headless server where no browser is available, `claude setup-token` mints
+a long-lived subscription-backed token you can inject as
+`CLAUDE_CODE_OAUTH_TOKEN`.
+
+**No agent API key is passed by default, and that is deliberate.** Setting
+`ANTHROPIC_API_KEY` or `OPENAI_API_KEY` switches the CLI to per-token API
+billing, which costs far more than a flat subscription for the same work. The
+trap is that it is silent: nothing tells you the runtime quietly changed how it
+bills. The entrypoint therefore logs a warning at boot when it sees either
+variable.
+
+If you do want API billing, opt in explicitly:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.api-auth.yml up -d
+```
+
 ## What persists
 
 | Container path          | Backing store                    | Contents                                            |

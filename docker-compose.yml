@@ -34,9 +34,9 @@ services:
       MULTICA_GC_ARTIFACT_TTL: ${MULTICA_GC_ARTIFACT_TTL:-6h}
       MULTICA_GC_REPO_TTL: ${MULTICA_GC_REPO_TTL:-168h}
 
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      CURSOR_API_KEY: ${CURSOR_API_KEY:-}
+      # No agent API key is passed on purpose: the CLIs authenticate through their
+      # subscription login, which is not metered per token. See README, "Agent
+      # authentication". Opt into API billing with docker-compose.api-auth.yml.
 
       CBM_CACHE_DIR: /data/codebase-memory
       CBM_RUNTIME_DIR: /tmp/codebase-memory-runtime
