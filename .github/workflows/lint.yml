@@ -26,3 +26,4 @@ jobs:
           cp .env.example .env
           docker compose config --quiet
           docker compose -f docker-compose.yml -f docker-compose.limits.yml config --quiet
+          docker compose -f docker-compose.yml -f docker-compose.api-auth.yml config --quiet
