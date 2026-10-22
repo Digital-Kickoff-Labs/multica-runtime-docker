@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 ARG GO_IMAGE=golang:1-bookworm
-ARG NODE_IMAGE=node:22-bookworm-slim
+ARG NODE_IMAGE=node:22.23.4-bookworm-slim
 
 FROM ${GO_IMAGE} AS multica-builder
 
