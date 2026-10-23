@@ -110,12 +110,16 @@ RUN set -eux; \
 
 ARG CLAUDE_CODE_VERSION=latest
 ARG CODEX_VERSION=latest
+ARG BUN_VERSION=1.4.4
 RUN npm install --global --no-fund --no-audit \
         "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" \
         "@openai/codex@${CODEX_VERSION}" \
+        "bun@${BUN_VERSION}" \
     && npm cache clean --force \
     && claude --version \
-    && codex --version
+    && codex --version \
+    && test "$(node --version)" = "v22.23.4" \
+    && test "$(bun --version)" = "1.4.4"
 
 COPY --from=multica-builder /out/multica ${MULTICA_BIN_DIR}/multica
 

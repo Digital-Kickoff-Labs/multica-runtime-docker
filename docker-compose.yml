@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
       args:
         MULTICA_REF: ${MULTICA_REF:-main}
-        NODE_IMAGE: ${NODE_IMAGE:-node:22-bookworm-slim}
+        NODE_IMAGE: ${NODE_IMAGE:-node:22.23.4-bookworm-slim}
         GO_IMAGE: ${GO_IMAGE:-golang:1-bookworm}
         CLAUDE_CODE_VERSION: ${CLAUDE_CODE_VERSION:-latest}
         CODEX_VERSION: ${CODEX_VERSION:-latest}
